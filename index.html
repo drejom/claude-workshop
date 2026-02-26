@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code Workshop — Power Features for Research</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+<style>
+/* ===========================================
+   CSS CUSTOM PROPERTIES — matches slide theme
+   =========================================== */
+:root {
+  --ink:        #0f0f0f;
+  --paper:      #f2f0ec;
+  --paper-warm: #ede9e1;
+  --red:        #e63c2f;
+  --red-light:  rgba(230, 60, 47, 0.08);
+  --muted:      #777;
+  --rule:       rgba(15,15,15,0.15);
+
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-mono:    'Space Mono', monospace;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  height: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-display);
+  background: var(--paper);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===========================================
+   TOP BAR
+   =========================================== */
+.topbar {
+  display: flex;
+  height: 5px;
+  width: 100%;
+  flex-shrink: 0;
+}
+.topbar-seg-1 { background: var(--ink); flex: 1; }
+.topbar-seg-2 { background: var(--red); flex: 1; }
+.topbar-seg-3 { background: var(--ink); flex: 1; }
+
+/* ===========================================
+   LAYOUT
+   =========================================== */
+.page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: clamp(2rem, 6vw, 5rem) clamp(1.5rem, 4vw, 3rem);
+  flex: 1;
+}
+
+/* ===========================================
+   HERO
+   =========================================== */
+.hero-label {
+  font-family: var(--font-mono);
+  font-size: clamp(0.65rem, 1vw, 0.8rem);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: clamp(0.5rem, 1.5vh, 1rem);
+}
+
+.hero-title {
+  font-size: clamp(2rem, 6vw, 4rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 0.95;
+  margin-bottom: clamp(0.75rem, 2vh, 1.25rem);
+}
+
+.hero-title .light { font-weight: 300; }
+.hero-title .accent { color: var(--red); }
+
+.hero-sub {
+  font-size: clamp(0.9rem, 1.5vw, 1.1rem);
+  color: var(--muted);
+  line-height: 1.5;
+  max-width: 52ch;
+  margin-bottom: clamp(1.5rem, 4vh, 2.5rem);
+}
+
+/* ===========================================
+   DIVIDER
+   =========================================== */
+.rule {
+  height: 2px;
+  background: var(--ink);
+  margin-bottom: clamp(1.5rem, 4vh, 2.5rem);
+}
+
+/* ===========================================
+   CTA — Workshop slides link
+   =========================================== */
+.cta-section {
+  margin-bottom: clamp(2rem, 5vh, 3rem);
+}
+
+.cta-link {
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(0.5rem, 1vw, 0.75rem);
+  font-size: clamp(1rem, 1.8vw, 1.25rem);
+  font-weight: 600;
+  color: var(--paper);
+  background: var(--ink);
+  padding: clamp(0.75rem, 2vw, 1rem) clamp(1.25rem, 3vw, 2rem);
+  text-decoration: none;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.cta-link:hover {
+  background: var(--red);
+  transform: translateY(-1px);
+}
+
+.cta-link svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.cta-sub {
+  margin-top: clamp(0.5rem, 1vh, 0.75rem);
+  font-family: var(--font-mono);
+  font-size: clamp(0.6rem, 0.9vw, 0.75rem);
+  color: var(--muted);
+}
+
+/* ===========================================
+   SECTION HEADING
+   =========================================== */
+.section-label {
+  font-family: var(--font-mono);
+  font-size: clamp(0.6rem, 0.85vw, 0.72rem);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: clamp(0.75rem, 2vh, 1.25rem);
+  padding-bottom: clamp(0.4rem, 1vh, 0.6rem);
+  border-bottom: 1px solid var(--rule);
+}
+
+/* ===========================================
+   CHECKLIST
+   =========================================== */
+.checklist {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.5rem, 1.2vh, 0.85rem);
+  margin-bottom: clamp(2rem, 5vh, 3rem);
+}
+
+.check-item {
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  gap: clamp(0.5rem, 1.5vw, 1rem);
+  align-items: baseline;
+}
+
+.check-box {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--ink);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.check-main {
+  font-size: clamp(0.85rem, 1.2vw, 1rem);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.check-code {
+  font-family: var(--font-mono);
+  font-size: clamp(0.65rem, 0.9vw, 0.78rem);
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* ===========================================
+   RESOURCES
+   =========================================== */
+.resources {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.4rem, 1vh, 0.7rem);
+  margin-bottom: clamp(2rem, 5vh, 3rem);
+}
+
+.resource-link {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  font-family: var(--font-mono);
+  font-size: clamp(0.7rem, 1vw, 0.85rem);
+  color: var(--ink);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.resource-link:hover { color: var(--red); }
+
+.resource-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+  flex-shrink: 0;
+}
+
+/* ===========================================
+   FOOTER
+   =========================================== */
+.footer {
+  border-top: 2px solid var(--ink);
+  padding: clamp(1rem, 3vh, 1.5rem) 0;
+  margin-top: auto;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: clamp(1.5rem, 4vw, 3rem);
+  padding-right: clamp(1.5rem, 4vw, 3rem);
+  width: 100%;
+}
+
+.footer-text {
+  font-family: var(--font-mono);
+  font-size: clamp(0.6rem, 0.85vw, 0.72rem);
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+/* ===========================================
+   RESPONSIVE
+   =========================================== */
+@media (max-width: 500px) {
+  .hero-title { font-size: clamp(1.75rem, 9vw, 3rem); }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-seg-1"></div>
+  <div class="topbar-seg-2"></div>
+  <div class="topbar-seg-3"></div>
+</div>
+
+<div class="page">
+
+  <!-- Hero -->
+  <div class="hero-label">Claude Code Workshop · University of Canberra · 2026</div>
+  <h1 class="hero-title">
+    <span class="light">Power</span> <span class="accent">Features</span><br>
+    <span class="light">for Research</span>
+  </h1>
+  <p class="hero-sub">
+    A hands-on workshop on Claude Code for ecologists and genomicists.
+    Slides, exercises, and everything you need to get started.
+  </p>
+
+  <div class="rule"></div>
+
+  <!-- CTA -->
+  <div class="cta-section">
+    <a class="cta-link" href="slides/workshop.html">
+      <svg viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m9 8 6 4-6 4Z"/></svg>
+      Workshop Slides
+    </a>
+    <div class="cta-sub">Navigate with arrow keys, space, or scroll</div>
+  </div>
+
+  <!-- Pre-workshop Checklist -->
+  <div class="section-label">Pre-Workshop Setup</div>
+  <div class="checklist">
+    <div class="check-item">
+      <div class="check-box"></div>
+      <div>
+        <div class="check-main">Install Node.js v18+</div>
+        <div class="check-code">nodejs.org &rarr; LTS download</div>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="check-box"></div>
+      <div>
+        <div class="check-main">Install Claude Code (CLI or Desktop app)</div>
+        <div class="check-code">npm install -g @anthropic-ai/claude-code &nbsp;or&nbsp; claude.ai/download</div>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="check-box"></div>
+      <div>
+        <div class="check-main">Sign in or set an API key</div>
+        <div class="check-code">claude login (Pro/Max) &nbsp;or&nbsp; export ANTHROPIC_API_KEY=sk-ant-...</div>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="check-box"></div>
+      <div>
+        <div class="check-main">Clone the workshop repo</div>
+        <div class="check-code">git clone https://github.com/drejom/claude-workshop.git</div>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="check-box"></div>
+      <div>
+        <div class="check-main">Verify it works</div>
+        <div class="check-code">CLI: claude --version &nbsp;&middot;&nbsp; Desktop: open app &rarr; point at a folder</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exercises -->
+  <div class="section-label">Exercises</div>
+  <div class="checklist">
+    <div class="check-item">
+      <div class="check-box" style="border-color:var(--red); color:var(--red); font-family:var(--font-mono); font-size:0.65rem; font-weight:700;">1</div>
+      <div>
+        <div class="check-main">Excel &rarr; Plain English Queries</div>
+        <div class="check-code">~15 min &middot; data/samples.xlsx</div>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="check-box" style="border-color:var(--red); color:var(--red); font-family:var(--font-mono); font-size:0.65rem; font-weight:700;">2</div>
+      <div>
+        <div class="check-main">R targets Pipeline</div>
+        <div class="check-code">~20 min &middot; exercises/02-r-targets-pipeline/</div>
+      </div>
+    </div>
+    <div class="check-item">
+      <div class="check-box" style="border-color:var(--red); color:var(--red); font-family:var(--font-mono); font-size:0.65rem; font-weight:700;">3</div>
+      <div>
+        <div class="check-main">NCI Gadi &mdash; HPC Job Submission (Hardip)</div>
+        <div class="check-code">~20 min &middot; exercises/03-gadi/</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resources -->
+  <div class="section-label">Resources</div>
+  <div class="resources">
+    <a class="resource-link" href="https://docs.anthropic.com/en/docs/claude-code">
+      <span class="resource-dot"></span>
+      Claude Code documentation
+    </a>
+    <a class="resource-link" href="https://github.com/modelcontextprotocol/servers">
+      <span class="resource-dot"></span>
+      MCP server ecosystem
+    </a>
+    <a class="resource-link" href="https://github.com/pachterlab/edgePython">
+      <span class="resource-dot"></span>
+      edgePython MCP
+    </a>
+    <a class="resource-link" href="https://github.com/K-Dense-AI/claude-scientific-skills">
+      <span class="resource-dot"></span>
+      Claude scientific skills
+    </a>
+    <a class="resource-link" href="https://github.com/drejom/claude-workshop">
+      <span class="resource-dot"></span>
+      This workshop repo on GitHub
+    </a>
+  </div>
+
+</div>
+
+<div class="footer">
+  <div class="footer-text">Denis O'Meally &middot; University of Canberra &middot; 2026</div>
+</div>
+
+</body>
+</html>
