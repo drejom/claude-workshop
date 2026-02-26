@@ -9,15 +9,19 @@
 ## R targets pipeline exercise — dataset
 
 **Species**: *Anolis carolinensis* (green anole lizard)
-**GEO accession**: GSE97367
-**Paper**: Dosage compensation across tetrapods (multi-species)
-**Design**: adult tissue RNA-seq, male vs female, 6 tissues (brain, heart, kidney, liver, ovary/testis), 3 reps/sex/tissue
-**Data**: FPKM expression matrices directly downloadable from GEO via `GEOquery::getGEOSuppFiles("GSE97367")`
-**Why**: real lizard data, confirmed counts on GEO, clean male vs female comparison, sex-biased gene expression — directly relevant; audience knows Anolis
+**GEO accession**: GSE291397
+**Paper**: Artificial Light at Night Disrupts Circadian and Metabolic Gene Expression in the Green Anole Lizard
+**Design**: adult RNA-seq, 12 males + 12 females, 6 tissues (brain, liver, dorsal skin, ventral skin, gonad, eye), 3 treatments (Midday control / Midnight / ALAN), n=4 per sex per treatment
+**Data**: `GSE291397_GA_raw_counts_FINAL.csv.gz` (6.4 Mb) — raw integer counts confirmed on GEO
+**Method**: limma-voom (integer counts; voom confirmed working end-to-end)
+**Status**: TESTED ✓ — 16,836 genes pass filterByExpr; 13,348 DE FDR<0.05 (Ovary vs Testes, as expected)
 
-> **Note on PRJNA699086** (bearded dragon ZW vs ZZ sex reversal): data is raw FASTQs only on SRA,
-> no count matrix deposited. Supplementary files are DESeq2 result tables, not input counts.
-> Would need full alignment pipeline to reuse — not suitable for a 20-min workshop slot.
+### Key metadata facts (confirmed by test run)
+
+- Tissue labels: `Ovary` (Female) and `Testes` (male) — separate values, not "Gonad"
+- Sex labels: `Female` / `male` (inconsistent case in GEO metadata — handle in code)
+- Library names in count matrix cols (e.g. `33TA`) match `description` field in pData as `"Library name: 33TA"`
+- Count matrix cols 1–5 are annotation (Chr, Start, End, Strand, Length) — skip these
 
 ### Basic prompt (interview pattern)
 
@@ -30,9 +34,9 @@ Then follow up with:
 
 ```
 The data is adult tissue RNA-seq from green anole lizards (Anolis carolinensis),
-GEO accession GSE97367. I want to compare male vs female gene expression in
-gonad tissue (ovary vs testis). Download the FPKM matrix with GEOquery,
-run DESeq2, and produce a results table.
+GEO accession GSE291397. I want to compare ovary vs testes gene expression using
+the Midday control samples (4 reps each). Download the raw count matrix with
+GEOquery, fetch sample metadata, run limma-voom, and produce a results table.
 Use :: notation, base pipe |>, and tidyverse style.
 ```
 
@@ -40,22 +44,27 @@ Use :: notation, base pipe |>, and tidyverse style.
 
 ```
 Create a complete R targets pipeline that:
-1. Downloads the FPKM expression matrix for Anolis carolinensis from GEO
-   accession GSE97367 using GEOquery::getGEOSuppFiles()
-2. Filters to gonad samples (ovary vs testis, 3 reps each)
-3. Runs DESeq2 comparing female (ovary) vs male (testis)
-4. Plots a volcano plot of sex-biased genes, labelling the top 10 by adjusted p-value
-5. Saves results table as CSV and plot as PNG
+1. Downloads raw count matrix GSE291397_GA_raw_counts_FINAL.csv.gz from GEO
+   accession GSE291397 using GEOquery::getGEOSuppFiles()
+2. Downloads sample metadata using GEOquery::getGEO("GSE291397")
+3. Filters to Midday control samples, tissue "Ovary" (Female) and "Testes" (male),
+   4 replicates each; matches library names from pData description field to count cols
+4. Runs limma-voom comparing Female (Ovary) vs Male (Testes)
+5. Plots a volcano plot labelling the top 15 DE genes by adjusted p-value
+6. Saves results table as CSV and volcano plot as PNG
 
-Use targets, DESeq2, GEOquery, ggplot2, ggrepel. Use :: notation throughout,
-base pipe |>, set.seed(42). Include _targets.R, R/ scripts,
-and exact install.packages() / BiocManager::install() calls needed.
+Use targets, limma, edgeR, GEOquery, ggplot2, ggrepel, dplyr.
+Use :: notation throughout, base pipe |>, set.seed(42).
+Include _targets.R, R/ scripts, and exact BiocManager::install() calls needed.
 ```
+
+> **Datasets ruled out:**
+> - GSE97367 (*Anolis*, dosage compensation): summary FPKM only — 1 value per tissue/sex, no replicates
+> - PRJNA699086 (*Pogona vitticeps*, ZW vs ZZ sex reversal): raw FASTQs on SRA only, no count matrix on GEO
 
 ## To resume
 
 - [ ] Add the samples URL + prompts to the slides
 - [ ] Write the basic plain-English Q&A prompt for samples.csv
 - [ ] Write the advanced one-shot UI explorer prompt for samples.csv
-- [ ] Add targets pipeline slide with GSE97367 prompts above
-- [ ] Test that GEOquery::getGEOSuppFiles("GSE97367") returns the Anolis FPKM file cleanly
+- [ ] Add targets pipeline slide with GSE291397 prompts above
