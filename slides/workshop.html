@@ -718,6 +718,110 @@ body {
 }
 
 /* ===========================================
+   EXERCISE PROMPTS SLIDE (s11)
+   =========================================== */
+.prompt-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(0.6rem, 1.5vw, 1.2rem);
+  flex: 1;
+  align-content: start;
+  margin-top: var(--gap);
+}
+
+.exercise-group {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.3rem, 0.8vh, 0.6rem);
+}
+
+.ex-heading {
+  font-family: var(--font-mono);
+  font-size: clamp(0.6rem, 0.85vw, 0.72rem);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--red);
+  padding-bottom: clamp(0.2rem, 0.5vh, 0.4rem);
+  border-bottom: 1px solid var(--rule);
+}
+
+.prompt-block {
+  position: relative;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 6px;
+  padding: clamp(0.5rem, 1vw, 0.8rem);
+  padding-right: clamp(2rem, 3vw, 2.5rem);
+  cursor: pointer;
+  transition: transform 0.15s var(--ease-out), box-shadow 0.15s;
+}
+
+.prompt-block:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.prompt-label {
+  font-family: var(--font-mono);
+  font-size: clamp(0.55rem, 0.75vw, 0.65rem);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--red);
+  margin-bottom: clamp(0.15rem, 0.3vh, 0.25rem);
+}
+
+.prompt-text {
+  font-family: var(--font-mono);
+  font-size: clamp(0.55rem, 0.8vw, 0.7rem);
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: rgba(242,240,236,0.85);
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.copy-btn {
+  position: absolute;
+  top: clamp(0.35rem, 0.6vw, 0.5rem);
+  right: clamp(0.35rem, 0.6vw, 0.5rem);
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(242,240,236,0.4);
+  transition: color 0.2s;
+  padding: 0;
+}
+
+.copy-btn:hover { color: var(--red); }
+
+.copy-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.copy-btn .icon-check { display: none; }
+.copy-btn.copied .icon-clipboard { display: none; }
+.copy-btn.copied .icon-check { display: block; }
+.copy-btn.copied { color: #22c55e; }
+
+.slide.alt .prompt-block {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* ===========================================
    RESPONSIVE BREAKPOINTS
    =========================================== */
 @media (max-height: 700px) {
@@ -751,6 +855,7 @@ body {
   .scope-grid { grid-template-columns: repeat(2, 1fr); }
   .pain-split { grid-template-columns: 1fr; }
   .feature-grid { grid-template-columns: 1fr; grid-template-rows: repeat(6, 1fr); }
+  .prompt-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 500px) {
@@ -1206,7 +1311,7 @@ body {
       </div>
       <div class="arc-body">
         <div class="arc-title">Excel → Plain English Queries</div>
-        <div class="arc-desc">Load <code style="font-family:var(--font-mono);font-size:var(--size-mono);">data/samples.xlsx</code> and ask Claude plain-English questions: "show sex ratios by species", "flag body-size outliers". No SQL, no Python needed.</div>
+        <div class="arc-desc">Give Claude the samples URL from the workshop site and ask plain-English questions: "show sex ratios by species", "flag body-size outliers". No SQL, no Python needed.</div>
         <div class="arc-tag">~15 min</div>
       </div>
     </div>
@@ -1237,7 +1342,7 @@ body {
 
   <div class="bottomline r d3">
     <div class="dot-red"></div>
-    <div class="label">Clone the repo to follow along: <code style="font-family:var(--font-mono); font-size:var(--size-mono);">github.com/drejom/claude-workshop</code></div>
+    <div class="label">Prompts and data at <code style="font-family:var(--font-mono); font-size:var(--size-mono);">drejom.github.io/claude-workshop</code></div>
   </div>
 </section>
 
@@ -1279,13 +1384,6 @@ body {
       </div>
     </div>
     <div class="check-item r d7">
-      <div class="check-box">✓</div>
-      <div class="check-text">
-        <div class="check-main">Clone the workshop repo</div>
-        <div class="check-code">git clone https://github.com/drejom/claude-workshop.git</div>
-      </div>
-    </div>
-    <div class="check-item r d8">
       <div class="check-box">✓</div>
       <div class="check-text">
         <div class="check-main">Verify it works</div>
@@ -1333,6 +1431,109 @@ body {
   <div class="bottomline r d5" style="border-color: rgba(242,240,236,0.15);">
     <div class="dot-red"></div>
     <div class="label">Denis O'Meally · University of Canberra · 2026</div>
+  </div>
+</section>
+
+
+<!-- =====================================================
+     SLIDE 11 — EXERCISE PROMPTS (click-to-copy)
+     ===================================================== -->
+<section class="slide alt" id="s11" aria-label="Exercise prompts to copy">
+  <div class="topline">
+    <div class="label r d1">Copy &amp; Paste Into Claude Code</div>
+  </div>
+
+  <div class="prompt-grid">
+
+    <!-- Exercise 1: samples.csv -->
+    <div class="exercise-group r d2">
+      <div class="ex-heading">01 &middot; samples.csv</div>
+
+      <div class="prompt-block" data-prompt="Fetch https://drejom.github.io/claude-workshop/data/samples.csv and save it locally. How many embryo samples are there? Which species have brain samples? Show sex ratios by species and flag any body-size outliers.">
+        <div class="prompt-label">Basic &middot; Plain English</div>
+        <div class="prompt-text">Fetch https://drejom.github.io/claude-workshop/data/samples.csv and save it locally. How many embryo samples are there? Which species have brain samples? Show sex ratios by species and flag any body-size outliers.</div>
+        <button class="copy-btn" aria-label="Copy prompt">
+          <svg class="icon-clipboard" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="icon-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+      </div>
+
+      <div class="prompt-block" data-prompt="Fetch https://drejom.github.io/claude-workshop/data/samples.csv and save it locally. Build a single-page interactive sample explorer with filters for species, tissue type, sex, and sequencing platform. Include a sortable table, summary statistics cards, and at least two charts. Save as explorer.html.">
+        <div class="prompt-label">Advanced &middot; Build a UI</div>
+        <div class="prompt-text">Fetch https://drejom.github.io/claude-workshop/data/samples.csv and save it locally. Build a single-page interactive sample explorer with filters for species, tissue type, sex, and sequencing platform. Include a sortable table, summary statistics cards, and at least two charts. Save as explorer.html.</div>
+        <button class="copy-btn" aria-label="Copy prompt">
+          <svg class="icon-clipboard" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="icon-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Exercise 2: R targets pipeline -->
+    <div class="exercise-group r d3">
+      <div class="ex-heading">02 &middot; R targets Pipeline</div>
+
+      <div class="prompt-block" data-prompt="I want to build a targets pipeline in R to analyse some RNA-seq data.
+Ask me 5–10 questions about my data and goals before writing any code.">
+        <div class="prompt-label">Interview Pattern</div>
+        <div class="prompt-text">I want to build a targets pipeline in R to analyse some RNA-seq data.
+Ask me 5–10 questions about my data and goals before writing any code.</div>
+        <button class="copy-btn" aria-label="Copy prompt">
+          <svg class="icon-clipboard" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="icon-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+      </div>
+
+      <div class="prompt-block" data-prompt="Create a complete R targets pipeline that:
+1. Downloads raw count matrix GSE291397_GA_raw_counts_FINAL.csv.gz from GEO accession GSE291397 using GEOquery::getGEOSuppFiles()
+2. Downloads sample metadata using GEOquery::getGEO(&quot;GSE291397&quot;)
+3. Filters to Midday control samples, tissue &quot;Ovary&quot; (Female) and &quot;Testes&quot; (male), 4 replicates each; matches library names from pData description field to count cols
+4. Runs limma-voom comparing Female (Ovary) vs Male (Testes)
+5. Plots a volcano plot labelling the top 15 DE genes by adjusted p-value
+6. Saves results table as CSV and volcano plot as PNG
+
+Use targets, limma, edgeR, GEOquery, ggplot2, ggrepel, dplyr. Use :: notation throughout, base pipe |>, set.seed(42). Include _targets.R, R/ scripts, and exact BiocManager::install() calls needed.">
+        <div class="prompt-label">One-Shot &middot; Full Pipeline</div>
+        <div class="prompt-text">Create a complete R targets pipeline that:
+1. Downloads raw counts for Anolis (GSE291397)
+2. Fetches metadata, filters Midday Ovary vs Testes
+3. Runs limma-voom Female vs Male
+4. Volcano plot of top 15 DE genes
+5. Saves results CSV + plot PNG</div>
+        <button class="copy-btn" aria-label="Copy prompt">
+          <svg class="icon-clipboard" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="icon-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Exercise 3: NCI Gadi -->
+    <div class="exercise-group r d4">
+      <div class="ex-heading">03 &middot; NCI Gadi (Hardip)</div>
+
+      <div class="prompt-block" data-prompt="Help me set up SSH keys so I can log in to NCI Gadi without a password. Follow the guide at https://docs.access-hive.org.au/getting_started/set_up_nci_account/#prerequisites — generate an ed25519 key pair, configure the SSH agent, create an ~/.ssh/config entry for gadi.nci.org.au, and authorize the public key on the remote host. Walk me through it step by step.">
+        <div class="prompt-label">SSH Key Setup</div>
+        <div class="prompt-text">Help me set up SSH keys for NCI Gadi. Follow the guide at docs.access-hive.org.au — generate ed25519 keys, configure SSH agent, create ~/.ssh/config, authorize on remote. Step by step.</div>
+        <button class="copy-btn" aria-label="Copy prompt">
+          <svg class="icon-clipboard" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="icon-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+      </div>
+
+      <div class="prompt-block" data-prompt="Read the nf-core/rnaseq 3.22.2 setup for NCI Gadi at https://kisarur.github.io/workflow-catalogue/view_documentation.html?name=rnaseq&amp;version=3.22.2 — use the module loads, demo data paths, and nci_gadi.config documented there. Write a PBS Pro job script that runs the test profile on Gadi with these settings: project xl04, queue normal, 1 CPU, 40GB RAM, 2hr walltime, storage gdata/if89+gdata/xl04+scratch/xl04. Set NXF_OFFLINE=true, NXF_SINGULARITY_CACHEDIR and NXF_PLUGINS_DIR per the if89 shared install paths, export TMPDIR to a /g/data/xl04 scratch area. Run nextflow with -profile test,singularity using the ${WF_HOME} config and demo data.">
+        <div class="prompt-label">nf-core/rnaseq Test on Gadi</div>
+        <div class="prompt-text">Read the nf-core/rnaseq 3.22.2 docs at kisarur.github.io/workflow-catalogue. Write a PBS Pro job script for Gadi: project xl04, queue normal, NXF_OFFLINE=true, -profile test,singularity, using ${WF_HOME} demo data.</div>
+        <button class="copy-btn" aria-label="Copy prompt">
+          <svg class="icon-clipboard" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <svg class="icon-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="bottomline r d5">
+    <div class="dot-red"></div>
+    <div class="label">Click any block to copy &middot; Full prompts at <code style="font-family:var(--font-mono); font-size:var(--size-mono);">github.com/drejom/claude-workshop</code></div>
   </div>
 </section>
 
@@ -1503,6 +1704,30 @@ class SlidePresentation {
 // Boot the presentation when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   new SlidePresentation();
+
+  /* ===========================================
+     CLICK-TO-COPY for prompt blocks
+     Clicking the block or the button copies data-prompt to clipboard.
+     =========================================== */
+  document.querySelectorAll('.prompt-block').forEach(block => {
+    const copyAction = () => {
+      const text = block.getAttribute('data-prompt');
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = block.querySelector('.copy-btn');
+        if (btn) {
+          btn.classList.add('copied');
+          setTimeout(() => btn.classList.remove('copied'), 1500);
+        }
+      });
+    };
+    block.addEventListener('click', (e) => {
+      if (e.target.closest('.copy-btn')) return; // handled below
+      copyAction();
+    });
+    const btn = block.querySelector('.copy-btn');
+    if (btn) btn.addEventListener('click', copyAction);
+  });
 });
 </script>
 </body>
