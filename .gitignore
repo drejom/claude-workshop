@@ -1,0 +1,7 @@
+
+# env / secrets
+exercises/.env
+.env
+
+# node
+exercises/node_modules/
