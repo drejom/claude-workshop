@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AusARG Genomics Sample Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0f172a; --surface: #1e293b; --surface2: #263349; --border: #334155;
+  --accent: #38bdf8; --accent-dim: rgba(56,189,248,0.15);
+  --green: #22c55e; --green-dim: rgba(34,197,94,0.15);
+  --amber: #f59e0b; --amber-dim: rgba(245,158,11,0.15);
+  --red: #ef4444; --red-dim: rgba(239,68,68,0.12);
+  --text: #e2e8f0; --text-muted: #94a3b8; --text-faint: #64748b;
+  --radius: 8px; --radius-lg: 12px;
+}
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.6; min-height: 100vh; }
+
+.header { background: linear-gradient(135deg, #0f172a 0%, #1a2744 100%); border-bottom: 1px solid var(--border); padding: 18px 24px 14px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.header-text { flex: 1; }
+.header h1 { font-size: 1.4rem; font-weight: 700; color: var(--accent); letter-spacing: -0.02em; }
+.header p { color: var(--text-muted); font-size: 0.82rem; margin-top: 2px; }
+.header-meta { font-size: 0.75rem; color: var(--text-faint); font-family: 'JetBrains Mono', monospace; }
+#last-updated { color: var(--accent); }
+.btn-refresh { display: flex; align-items: center; gap: 6px; padding: 7px 14px; background: var(--accent-dim); border: 1px solid var(--accent); color: var(--accent); border-radius: var(--radius); cursor: pointer; font-size: 0.8rem; font-weight: 500; transition: background 0.15s; font-family: 'Inter', sans-serif; }
+.btn-refresh:hover { background: rgba(56,189,248,0.25); }
+.btn-refresh.loading svg { animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+#overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.88); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; gap: 14px; }
+#overlay.hidden { display: none; }
+.spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+#overlay-msg { color: var(--text-muted); font-size: 0.9rem; }
+#error-banner { display: none; background: var(--red-dim); border: 1px solid var(--red); color: #fca5a5; padding: 10px 16px; border-radius: var(--radius); margin: 12px 24px 0; font-size: 0.85rem; }
+
+.filter-bar { position: sticky; top: 0; z-index: 50; background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 24px 8px; }
+.filter-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.filter-label { font-size: 0.75rem; font-weight: 600; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.06em; margin-right: 2px; }
+.filter-select { appearance: none; background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 5px 28px 5px 10px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; font-family: 'Inter', sans-serif; transition: border-color 0.15s; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2364748b'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+.filter-select:focus { outline: none; border-color: var(--accent); }
+.filter-select.active { border-color: var(--accent); background-color: var(--accent-dim); color: var(--accent); }
+.search-input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-family: 'Inter', sans-serif; width: 180px; transition: border-color 0.15s; }
+.search-input:focus { outline: none; border-color: var(--accent); }
+.btn-clear { background: none; border: 1px solid var(--border); color: var(--text-muted); padding: 5px 12px; border-radius: 20px; cursor: pointer; font-size: 0.78rem; font-family: 'Inter', sans-serif; transition: all 0.15s; }
+.btn-clear:hover { border-color: var(--red); color: var(--red); }
+.chip-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 7px; min-height: 4px; }
+.chip { display: flex; align-items: center; gap: 5px; background: var(--accent-dim); border: 1px solid var(--accent); color: var(--accent); padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 500; }
+.chip button { background: none; border: none; color: var(--accent); cursor: pointer; padding: 0; font-size: 0.85rem; line-height: 1; margin-left: 2px; }
+
+.main { padding: 20px 24px; max-width: 1600px; margin: 0 auto; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; }
+.card-label { font-size: 0.72rem; font-weight: 600; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.07em; }
+.card-value { font-size: 1.75rem; font-weight: 700; color: var(--accent); line-height: 1.1; margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+.card-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 3px; }
+
+.charts-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 16px; }
+.chart-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+@media (max-width: 900px) { .chart-row-2 { grid-template-columns: 1fr; } }
+.chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 20px; }
+.chart-title { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 12px; }
+
+.table-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.table-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 8px; }
+.table-header-left { font-size: 0.8rem; color: var(--text-muted); }
+.table-header-left strong { color: var(--text); }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 0.76rem; }
+thead tr { background: var(--surface2); }
+th { padding: 9px 12px; text-align: left; font-weight: 600; color: var(--text-faint); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap; cursor: pointer; user-select: none; border-bottom: 1px solid var(--border); }
+th:hover { color: var(--text); }
+th.sort-asc::after { content: ' ▲'; color: var(--accent); }
+th.sort-desc::after { content: ' ▼'; color: var(--accent); }
+td { padding: 8px 12px; border-bottom: 1px solid rgba(51,65,85,0.5); white-space: nowrap; color: var(--text-muted); vertical-align: middle; }
+td.primary { color: var(--text); font-weight: 500; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; }
+.badge-green { background: var(--green-dim); color: var(--green); }
+.badge-amber { background: var(--amber-dim); color: var(--amber); }
+.sra-link { color: var(--accent); text-decoration: none; }
+.sra-link:hover { text-decoration: underline; }
+
+.pagination { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+.page-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); padding: 5px 11px; border-radius: var(--radius); cursor: pointer; font-size: 0.8rem; font-family: 'Inter', sans-serif; transition: all 0.15s; }
+.page-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.page-btn:disabled { opacity: 0.35; cursor: default; }
+.page-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+.page-info { font-size: 0.78rem; color: var(--text-faint); padding: 0 6px; }
+</style>
+</head>
+<body>
+
+<div id="overlay">
+  <div class="spinner"></div>
+  <div id="overlay-msg">Connecting to database…</div>
+</div>
+
+<div class="header">
+  <div class="header-text">
+    <h1>AusARG Genomics Sample Explorer</h1>
+    <p>Live query &middot; Team_AusARG &middot; georges.biomatix.org</p>
+  </div>
+  <div class="header-meta">Updated: <span id="last-updated">—</span></div>
+  <button class="btn-refresh" id="btn-refresh" onclick="refresh()">
+    <svg id="refresh-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+    Refresh
+  </button>
+</div>
+
+<div id="error-banner"></div>
+
+<div class="filter-bar">
+  <div class="filter-row">
+    <span class="filter-label">Filter</span>
+    <input class="search-input" id="f-search" placeholder="Search ID / species…" oninput="onFilterChange()">
+    <select class="filter-select" id="f-organism" onchange="onFilterChange()"><option value="">All species</option></select>
+    <select class="filter-select" id="f-tissue"   onchange="onFilterChange()"><option value="">All tissues</option></select>
+    <select class="filter-select" id="f-stage"    onchange="onFilterChange()"><option value="">All stages</option></select>
+    <select class="filter-select" id="f-platform" onchange="onFilterChange()"><option value="">All platforms</option></select>
+    <select class="filter-select" id="f-strategy" onchange="onFilterChange()"><option value="">All strategies</option></select>
+    <select class="filter-select" id="f-status"   onchange="onFilterChange()"><option value="">All statuses</option></select>
+    <button class="btn-clear" onclick="clearFilters()">Clear all</button>
+  </div>
+  <div class="chip-row" id="chip-row"></div>
+</div>
+
+<div class="main">
+  <div class="cards">
+    <div class="card"><div class="card-label">Total Samples</div><div class="card-value" id="c-total">—</div></div>
+    <div class="card"><div class="card-label">Unique Specimens</div><div class="card-value" id="c-specimens">—</div></div>
+    <div class="card"><div class="card-label">Species</div><div class="card-value" id="c-species">—</div></div>
+    <div class="card"><div class="card-label">Tissues</div><div class="card-value" id="c-tissues">—</div></div>
+    <div class="card"><div class="card-label">SRA Accessions</div><div class="card-value" id="c-sra">—</div><div class="card-sub" id="c-sra-pct"></div></div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">Samples per species — by tissue</div>
+      <div style="position:relative;height:280px"><canvas id="chart-org-tissue"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-row-2">
+    <div class="chart-card">
+      <div class="chart-title">Library strategy breakdown</div>
+      <div style="position:relative;height:240px"><canvas id="chart-strategy"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Samples by developmental stage</div>
+      <div style="position:relative;height:240px"><canvas id="chart-stage"></canvas></div>
+    </div>
+  </div>
+
+  <div class="table-section">
+    <div class="table-header">
+      <div class="table-header-left">Showing <strong id="t-showing">…</strong> of <strong id="t-total">…</strong> samples</div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="setSort('RefCode')">#</th>
+            <th onclick="setSort('SampleID')">Sample ID</th>
+            <th onclick="setSort('Organism')">Species</th>
+            <th onclick="setSort('Tissue')">Tissue</th>
+            <th onclick="setSort('Stage')">Stage</th>
+            <th onclick="setSort('platform')">Platform</th>
+            <th onclick="setSort('library_strategy')">Strategy</th>
+            <th onclick="setSort('instrument_model')">Instrument</th>
+            <th onclick="setSort('Provider')">Provider</th>
+            <th onclick="setSort('Status')">Status</th>
+            <th onclick="setSort('SRA')">SRA</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+</div>
+
+<script>
+const state = { page: 1, limit: 25, total: 0, sort: 'RefCode', dir: 'asc', debounceTimer: null };
+let charts = {};
+
+async function boot() {
+  try {
+    await loadFilters();
+    await Promise.all([loadSummary(), loadTable()]);
+    document.getElementById('overlay').classList.add('hidden');
+    document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
+  } catch (e) { showError(e.message); }
+}
+
+async function loadFilters() {
+  const data = await apiFetch('/api/filters');
+  const map = { 'f-organism': data.organism, 'f-tissue': data.tissue, 'f-stage': data.stage, 'f-platform': data.platform, 'f-strategy': data.strategy, 'f-status': data.status };
+  for (const [id, vals] of Object.entries(map)) {
+    const sel = document.getElementById(id);
+    for (const v of vals) { const o = document.createElement('option'); o.value = o.textContent = v; sel.appendChild(o); }
+  }
+}
+
+function getFilters() {
+  return {
+    search:   document.getElementById('f-search').value.trim(),
+    organism: document.getElementById('f-organism').value,
+    tissue:   document.getElementById('f-tissue').value,
+    stage:    document.getElementById('f-stage').value,
+    platform: document.getElementById('f-platform').value,
+    strategy: document.getElementById('f-strategy').value,
+    status:   document.getElementById('f-status').value,
+  };
+}
+
+function onFilterChange() {
+  clearTimeout(state.debounceTimer);
+  state.debounceTimer = setTimeout(() => { state.page = 1; updateChips(); Promise.all([loadSummary(), loadTable()]); }, 280);
+}
+
+function clearFilters() {
+  ['f-search','f-organism','f-tissue','f-stage','f-platform','f-strategy','f-status'].forEach(id => { document.getElementById(id).value = ''; });
+  onFilterChange();
+}
+
+function updateChips() {
+  const f = getFilters();
+  const labels = { organism:'Species', tissue:'Tissue', stage:'Stage', platform:'Platform', strategy:'Strategy', status:'Status', search:'Search' };
+  const row = document.getElementById('chip-row');
+  row.innerHTML = '';
+  for (const [k, v] of Object.entries(f)) {
+    if (!v) continue;
+    const chip = document.createElement('div'); chip.className = 'chip';
+    chip.innerHTML = `<span>${labels[k]}: <b>${v}</b></span><button onclick="clearFilter('${k}')">×</button>`;
+    row.appendChild(chip);
+  }
+  for (const [k, id] of [['organism','f-organism'],['tissue','f-tissue'],['stage','f-stage'],['platform','f-platform'],['strategy','f-strategy'],['status','f-status']]) {
+    document.getElementById(id).classList.toggle('active', !!f[k]);
+  }
+}
+
+function clearFilter(key) {
+  const map = { organism:'f-organism', tissue:'f-tissue', stage:'f-stage', platform:'f-platform', strategy:'f-strategy', status:'f-status', search:'f-search' };
+  document.getElementById(map[key]).value = '';
+  onFilterChange();
+}
+
+// ── Summary + Charts ──────────────────────────────────────────────────────────
+async function loadSummary() {
+  const data = await apiFetch('/api/summary?' + toQS(getFilters()));
+  const { total, specimens, species, tissues, with_sra } = data.counts;
+  document.getElementById('c-total').textContent     = total;
+  document.getElementById('c-specimens').textContent = specimens;
+  document.getElementById('c-species').textContent   = species;
+  document.getElementById('c-tissues').textContent   = tissues;
+  document.getElementById('c-sra').textContent       = with_sra;
+  document.getElementById('c-sra-pct').textContent   = total ? `${Math.round(with_sra / total * 100)}% have accession` : '';
+  renderOrgTissueChart(data.byOrgTissue);
+  renderStrategyChart(data.byStrategy);
+  renderStageChart(data.byStage);
+}
+
+const PAL = ['#38bdf8','#818cf8','#34d399','#fb923c','#f472b6','#a78bfa','#facc15','#4ade80','#f87171','#22d3ee','#94a3b8','#fbbf24','#c084fc','#86efac','#fda4af','#67e8f9'];
+
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+function renderOrgTissueChart(rows) {
+  const orgs    = [...new Set(rows.map(r => r.Organism))];
+  const tissues = [...new Set(rows.map(r => r.Tissue))];
+  const lkp = {};  rows.forEach(r => { lkp[`${r.Organism}|${r.Tissue}`] = r.n; });
+  const datasets = tissues.map((t, i) => ({ label: t, data: orgs.map(o => lkp[`${o}|${t}`] || 0), backgroundColor: PAL[i % PAL.length], borderWidth: 0 }));
+  destroyChart('chart-org-tissue');
+  charts['chart-org-tissue'] = new Chart(document.getElementById('chart-org-tissue'), {
+    type: 'bar',
+    data: { labels: orgs.map(o => o.replace(/_/g,' ')), datasets },
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 }, boxWidth: 12, padding: 10 } } },
+      scales: { x: { stacked: true, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(51,65,85,0.5)' } },
+                y: { stacked: true, ticks: { color: '#e2e8f0', font: { size: 11 } }, grid: { display: false } } } },
+  });
+}
+
+function renderStrategyChart(rows) {
+  destroyChart('chart-strategy');
+  charts['chart-strategy'] = new Chart(document.getElementById('chart-strategy'), {
+    type: 'doughnut',
+    data: { labels: rows.map(r => r.library_strategy), datasets: [{ data: rows.map(r => r.n), backgroundColor: PAL, borderWidth: 0, hoverOffset: 6 }] },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 11 }, boxWidth: 12, padding: 8 } } } },
+  });
+}
+
+function renderStageChart(rows) {
+  destroyChart('chart-stage');
+  charts['chart-stage'] = new Chart(document.getElementById('chart-stage'), {
+    type: 'bar',
+    data: { labels: rows.map(r => r.Stage || 'unknown'), datasets: [{ label: 'Samples', data: rows.map(r => r.n), backgroundColor: PAL, borderWidth: 0, borderRadius: 4 }] },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { ticks: { color: '#94a3b8' }, grid: { display: false } }, y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(51,65,85,0.5)' } } } },
+  });
+}
+
+// ── Table ─────────────────────────────────────────────────────────────────────
+async function loadTable() {
+  const qs   = toQS({ ...getFilters(), page: state.page, limit: state.limit, sort: state.sort, dir: state.dir });
+  const data = await apiFetch('/api/samples?' + qs);
+  state.total = data.total;
+  renderTable(data.rows);
+  renderPagination(data.total, data.page, data.limit);
+  const start = (data.page - 1) * data.limit + 1;
+  const end   = Math.min(data.page * data.limit, data.total);
+  document.getElementById('t-showing').textContent = `${start}–${end}`;
+  document.getElementById('t-total').textContent   = data.total;
+
+  document.querySelectorAll('thead th').forEach(th => th.classList.remove('sort-asc','sort-desc'));
+  const sortIdx = { RefCode:0, SampleID:1, Organism:2, Tissue:3, Stage:4, platform:5, library_strategy:6, instrument_model:7, Provider:8, Status:9, SRA:10 };
+  const ths = document.querySelectorAll('thead th');
+  if (sortIdx[state.sort] !== undefined) ths[sortIdx[state.sort]].classList.add(state.dir === 'asc' ? 'sort-asc' : 'sort-desc');
+}
+
+function renderTable(rows) {
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:32px;color:var(--text-faint)">No samples match the current filters</td></tr>';
+    return;
+  }
+  for (const r of rows) {
+    const sra = r.SRA ? `<a class="sra-link" href="https://www.ncbi.nlm.nih.gov/sra/${r.SRA}" target="_blank" rel="noopener">${r.SRA}</a>` : '<span style="color:var(--text-faint)">—</span>';
+    const badge = r.Status === 'completed' ? '<span class="badge badge-green">completed</span>' : `<span class="badge badge-amber">${r.Status || '—'}</span>`;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td style="color:var(--text-faint)">${r.RefCode}</td><td class="primary">${r.SampleID || '—'}</td><td><em>${r.Organism || '—'}</em></td><td>${r.Tissue || '—'}</td><td>${r.Stage || '—'}</td><td>${r.platform || '—'}</td><td>${r.library_strategy || '—'}</td><td>${r.instrument_model || '—'}</td><td>${r.Provider || '—'}</td><td>${badge}</td><td>${sra}</td>`;
+    tbody.appendChild(tr);
+  }
+}
+
+function renderPagination(total, page, limit) {
+  const pages = Math.ceil(total / limit);
+  const p = document.getElementById('pagination');
+  p.innerHTML = '';
+  if (pages <= 1) return;
+  const btn = (label, pg, active, disabled) => {
+    const b = document.createElement('button');
+    b.className = 'page-btn' + (active ? ' active' : '');
+    b.textContent = label; b.disabled = !!disabled;
+    b.onclick = () => { state.page = pg; loadTable(); };
+    return b;
+  };
+  p.appendChild(btn('‹', page - 1, false, page === 1));
+  for (let i = 1; i <= pages; i++) {
+    if (i === 1 || i === pages || (i >= page - 2 && i <= page + 2)) { p.appendChild(btn(i, i, i === page)); }
+    else if (i === page - 3 || i === page + 3) { const s = document.createElement('span'); s.className = 'page-info'; s.textContent = '…'; p.appendChild(s); }
+  }
+  p.appendChild(btn('›', page + 1, false, page === pages));
+  const info = document.createElement('span'); info.className = 'page-info';
+  info.textContent = `Page ${page} of ${pages}`; p.appendChild(info);
+}
+
+function setSort(col) {
+  state.dir  = state.sort === col ? (state.dir === 'asc' ? 'desc' : 'asc') : 'asc';
+  state.sort = col; state.page = 1;
+  loadTable();
+}
+
+async function refresh() {
+  const btn = document.getElementById('btn-refresh');
+  btn.classList.add('loading');
+  try {
+    await Promise.all([loadSummary(), loadTable()]);
+    document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
+  } finally { btn.classList.remove('loading'); }
+}
+
+function toQS(obj) {
+  return Object.entries(obj).filter(([,v]) => v !== '' && v != null).map(([k,v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
+}
+
+async function apiFetch(url) {
+  const r = await fetch(url);
+  if (!r.ok) { const e = await r.json().catch(() => ({ error: r.statusText })); throw new Error(e.error || r.statusText); }
+  return r.json();
+}
+
+function showError(msg) {
+  document.getElementById('overlay').classList.add('hidden');
+  const b = document.getElementById('error-banner');
+  b.textContent = `Cannot reach API: ${msg}. Is server.js running? (node server.js)`;
+  b.style.display = 'block';
+}
+
+boot();
+</script>
+</body>
+</html>
